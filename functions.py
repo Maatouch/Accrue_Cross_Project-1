@@ -242,7 +242,7 @@ def create_full_event(symbol, event_type, ids_file=ids_file):
 
 
 def update_symbol(symbol, golden_id='', deaths_id='', update_type="first", start_date='1800-01-01',
-                  last_updated_date='1800-01-01', end_date='2010-01-01'):
+                  last_updated_date='1800-01-01', end_date= date.today().strftime("%Y-%m-%d")):
     #date.today().strftime("%Y-%m-%d")
 
     print(symbol)
