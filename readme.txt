@@ -5,4 +5,4 @@ main.py : create_symbols()
 To update new symbols : 
 main.py : update_success_file(type='now')
 To delete events : 
-delete events/delete_events.py (will delete events_ids.csv events)
+delete events/delete_events.py (will delete events_ids.csv ids)
