@@ -1,0 +1,17 @@
+from datetime import datetime, timedelta
+from threading import Timer
+import time
+def print_hello():
+    print("hello")
+
+def update_success_file():
+   while 1 :
+        x = datetime.today()
+        y = x + timedelta(seconds=5)
+        print(y)
+        delta_t = y - x
+        secs = delta_t.total_seconds()
+        time.sleep( secs )
+        print_hello()
+
+update_success_file()
