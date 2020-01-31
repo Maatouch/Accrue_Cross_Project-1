@@ -4,6 +4,4 @@ It can also update events every day at 4pm EST
 To add new symbols :
 main.py : create_symbols()
 To update new dates : 
-main.py : update_success_file(type='now')
-To delete events : 
-delete events/delete_events.py (will delete events_ids.csv ids)
+main.py : update_success_file(type='periodically')
