@@ -17,9 +17,15 @@ class MyError(Exception):
 def sign(x):
     return (x > 0) - (x < 0)
 
+success_file = "success.csv"
+success_file_temp = "success_file_temp"
+error_file = "errors.csv"
+update_error_file = "update_errors.csv"
+ids_file = "events_ids.csv"
+update_summary_file = "update_summary_file.csv"
 
-def initialize_data_files_with_headers():
-    with open("success.csv", "w", newline='') as f:
+def initialize_data_files_with_headers(success_file='success.csv', update_error_file='update_errors.csv', update_summary_file='update_summary_file.csv'):
+    with open(success_file, "w", newline='') as f:
         f_names = ["symbol", "golden", "deaths", "last_update", "number-of-added-dates"]
         writer = csv.DictWriter(f, delimiter='\t', fieldnames=f_names)
         writer.writeheader()
@@ -29,12 +35,12 @@ def initialize_data_files_with_headers():
         writer = csv.DictWriter(f, delimiter='\t', fieldnames=f_names)
         writer.writeheader()
 
-    with open("update_errors.csv", "w", newline='') as f:
+    with open(update_error_file, "w", newline='') as f:
         f_names = ["symbol", "date", "error_type", "error_code"]
         writer = csv.DictWriter(f, delimiter='\t', fieldnames=f_names)
         writer.writeheader()
 
-    with open("update_summary_file.csv", "w", newline='') as f:
+    with open(update_summary_file, "w", newline='') as f:
         f_names = ['date', 'number_of_processed_symbs', 'number_of_modified_symbs', 'nbr_dates_added', 'nbr_errors']
         writer = csv.DictWriter(f, delimiter='\t', fieldnames=f_names)
         writer.writeheader()
@@ -59,19 +65,33 @@ def post_data(url, params):
 
 def delete_events(event_ids, URLevents=URL_events, auth_token=auth_token):
     for event_id in event_ids:
+        print(event_id)
         URLevent = URLevents + "/" + str(event_id)
         PARAMSdeleteevent = {"auth-token": auth_token}
         response = requests.delete(url=URLevent, params=PARAMSdeleteevent)
+        print(response)
         # handle event creation error #
         if response.status_code != 204:
-            with open("../delete events/events_ids_not_deleted.csv", "a", newline='') as f:
+            with open("events_ids_not_deleted.csv", "a", newline='') as f:
                 writer = csv.writer(f, delimiter='\t')
                 writer.writerow([event_id])
     return 1
 
 
+def delete_events_from_file(file='events_ids.csv'):
+    with open(file, 'r') as f:
+        reader = csv.reader(f)
+        event_ids = list(reader)
+
+
+    event_ids = [i[0] for i in event_ids if i ]
+    print(event_ids)
+    delete_events(event_ids)
+
+
+
 def create_event(symbol, event_type, URLevents=URL_events, auth_token=auth_token):
-    PARAMS3 = {"auth-token": auth_token, "event_name": "daily - " + event_type + "-cross - " + symbol,
+    PARAMS3 = {"auth-token": auth_token, "event_name": "Daily - " + event_type + "-cross - " + symbol,
                "event_edit": "private", "event_read": "public"}
     response = post_data(URLevents, PARAMS3)
 
@@ -242,8 +262,7 @@ def create_full_event(symbol, event_type, ids_file=ids_file):
 
 
 def update_symbol(symbol, golden_id='', deaths_id='', update_type="first", start_date='1800-01-01',
-                  last_updated_date='1800-01-01', end_date= date.today().strftime("%Y-%m-%d")):
-    #date.today().strftime("%Y-%m-%d")
+                  last_updated_date='1800-01-01', end_date=date.today().strftime("%Y-%m-%d")):  # date.today().strftime("%Y-%m-%d")
 
     print(symbol)
     event_ids = {'Golden': golden_id, 'Death': deaths_id}
@@ -258,7 +277,6 @@ def update_symbol(symbol, golden_id='', deaths_id='', update_type="first", start
     # extract data #
     dl = response.json()["data"]
 
-
     # process data #
     cross_lists = process_data(dl)
 
@@ -267,7 +285,6 @@ def update_symbol(symbol, golden_id='', deaths_id='', update_type="first", start
 
         # create events #
         if update_type == "first":
-
             event_id = create_full_event(symbol, cross_name)
             event_ids[cross_name] = event_id
 
@@ -305,12 +322,13 @@ def create_symbols(symbols_file='symbols.csv', first=0, last=31705):
     update_symbols(symbols[first:last])
 
 
-def update_success_file(success_file=success_file, type='periodically'):
+def update_symbols_from_file(file=success_file,first=None, last=None, type='periodically', with_header=1):
 
-    with open(success_file, "r", newline='') as f:
+    with open(file, "r", newline='') as f:
         reader = csv.reader(f, delimiter='\t')
-        next(f)
-        symbols = [item[0] for item in list(reader)]
+        if with_header==1:
+            next(f)
+        symbols = [item[0] for item in list(reader)][first:last]
 
     if type == 'periodically':
         while 1:
@@ -319,16 +337,12 @@ def update_success_file(success_file=success_file, type='periodically'):
             delta_t = y - x
             secs = delta_t.total_seconds()
             time.sleep(secs)
-            update_symbols(symbols, success_file)
+            update_symbols(symbols)
 
     if type == 'now':
-        update_symbols(symbols, success_file)
+        update_symbols(symbols)
 
     # replace function by update_symbol
-
-
-
-
 
 
 def update_symbols(symbs,success_file=success_file, success_file_temp=success_file_temp):
