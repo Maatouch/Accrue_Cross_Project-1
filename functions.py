@@ -313,7 +313,7 @@ def update_symbol(symbol, golden_id='', deaths_id='', update_type="first", start
     return event_ids, tot_nbr_added_dates, last_update_date
 
 
-def create_symbols(symbols_file='symbols.csv', first=0, last=31705):
+def create_symbols(symbols_file=symbols_file, first=None, last=None):
 
     with open(symbols_file, 'r') as f:
         reader = csv.reader(f)
